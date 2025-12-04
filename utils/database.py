@@ -3,7 +3,6 @@ Database utility functions for ERP system
 Provides helper functions for database operations
 """
 
-from sqlalchemy.orm import Session
 from models import SessionLocal
 from contextlib import contextmanager
 

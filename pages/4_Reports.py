@@ -9,7 +9,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 from sqlalchemy import func, extract
-from models import Product, Sale, FinancialRecord
+from models import Product, Sale
 from utils.auth import require_auth
 from utils.database import get_session
 from config import LOW_STOCK_THRESHOLD
