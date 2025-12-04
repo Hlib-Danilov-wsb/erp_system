@@ -191,67 +191,70 @@ with col4:
 
 st.divider()
 
-# Create new sale section
-st.subheader("🛒 Record New Sale")
+# Create new sale section (Admin and Cashier only)
+if st.session_state.role in ['admin', 'cashier']:
+    st.subheader("🛒 Record New Sale")
 
-products_dict = get_available_products()
+    products_dict = get_available_products()
 
-if not products_dict:
-    st.warning("No products available for sale. Please add products to inventory first.")
-else:
-    with st.form("new_sale_form"):
-        col1, col2, col3 = st.columns(3)
+    if not products_dict:
+        st.warning("No products available for sale. Please add products to inventory first.")
+    else:
+        with st.form("new_sale_form"):
+            col1, col2, col3 = st.columns(3)
 
-        with col1:
-            selected_product = st.selectbox(
-                "Select Product*",
-                options=list(products_dict.keys()),
-                help="Products with available stock"
-            )
+            with col1:
+                selected_product = st.selectbox(
+                    "Select Product*",
+                    options=list(products_dict.keys()),
+                    help="Products with available stock"
+                )
 
-        with col2:
-            customer_name = st.text_input(
-                "Customer Name*",
-                placeholder="Enter customer name"
-            )
+            with col2:
+                customer_name = st.text_input(
+                    "Customer Name*",
+                    placeholder="Enter customer name"
+                )
 
-        with col3:
+            with col3:
+                if selected_product:
+                    product = products_dict[selected_product]
+                    max_quantity = product['stock']
+                    quantity = st.number_input(
+                        f"Quantity* (Max: {max_quantity})",
+                        min_value=1,
+                        max_value=max_quantity,
+                        value=1,
+                        step=1
+                    )
+                else:
+                    quantity = st.number_input("Quantity*", min_value=1, value=1, step=1)
+
+            # Show price preview
             if selected_product:
                 product = products_dict[selected_product]
-                max_quantity = product['stock']
-                quantity = st.number_input(
-                    f"Quantity* (Max: {max_quantity})",
-                    min_value=1,
-                    max_value=max_quantity,
-                    value=1,
-                    step=1
-                )
-            else:
-                quantity = st.number_input("Quantity*", min_value=1, value=1, step=1)
+                total_preview = product['price'] * quantity
+                st.info(f"💵 Total Price: ${total_preview:.2f} (${product['price']:.2f} x {quantity})")
 
-        # Show price preview
-        if selected_product:
-            product = products_dict[selected_product]
-            total_preview = product['price'] * quantity
-            st.info(f"💵 Total Price: ${total_preview:.2f} (${product['price']:.2f} x {quantity})")
+            submit_sale = st.form_submit_button("Record Sale", use_container_width=True)
 
-        submit_sale = st.form_submit_button("Record Sale", use_container_width=True)
-
-        if submit_sale:
-            if not customer_name:
-                st.error("Please enter customer name")
-            elif not selected_product:
-                st.error("Please select a product")
-            else:
-                product = products_dict[selected_product]
-                with st.spinner("Recording sale..."):
-                    success, message = create_sale(product['id'], customer_name, quantity)
-                    if success:
-                        st.success(message)
-                        st.balloons()
-                        st.rerun()
-                    else:
-                        st.error(message)
+            if submit_sale:
+                if not customer_name:
+                    st.error("Please enter customer name")
+                elif not selected_product:
+                    st.error("Please select a product")
+                else:
+                    product = products_dict[selected_product]
+                    with st.spinner("Recording sale..."):
+                        success, message = create_sale(product['id'], customer_name, quantity)
+                        if success:
+                            st.success(message)
+                            st.balloons()
+                            st.rerun()
+                        else:
+                            st.error(message)
+else:
+    st.info("ℹ️ Only Admins and Cashiers can record sales.")
 
 st.divider()
 

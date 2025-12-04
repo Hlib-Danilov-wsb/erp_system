@@ -123,6 +123,44 @@ The application will open in your default browser at `http://localhost:8501`
 - Manager: `manager1` / `manager123`
 - Cashier: `cashier1` / `cashier123`
 
+## Role-Based Access Control
+
+The ERP system implements role-based permissions to control what each user can do:
+
+### 👑 Admin (Full Access)
+**Permissions:**
+- ✅ **Dashboard**: View all KPIs and charts
+- ✅ **Inventory**: Add, edit, and delete products
+- ✅ **Sales**: Record sales and view history
+- ✅ **Finance**: Add expenses, view all financial records (Admin only)
+- ✅ **Reports**: View all analytics and export data
+
+### 👔 Manager (Inventory Management)
+**Permissions:**
+- ✅ **Dashboard**: View all KPIs and charts
+- ✅ **Inventory**: Add new products (cannot edit/delete)
+- ✅ **Sales**: View sales history only (cannot record sales)
+- ❌ **Finance**: No access
+- ✅ **Reports**: View all analytics and export data
+
+### 💼 Cashier (Sales Operations)
+**Permissions:**
+- ✅ **Dashboard**: View all KPIs and charts
+- ✅ **Inventory**: View products only (cannot add/edit/delete)
+- ✅ **Sales**: Record sales and view history
+- ❌ **Finance**: No access
+- ✅ **Reports**: View sales-related analytics
+
+  | Feature              | Admin  | Manager | Cashier |
+  |----------------------|--------|---------|---------|
+  | Dashboard            | ✅ Full | ✅ Full  | ✅ Full  |
+  | Add Products         | ✅      | ✅       | ❌       |
+  | Edit/Delete Products | ✅      | ❌       | ❌       |
+  | Record Sales         | ✅      | ❌       | ✅       |
+  | View Sales           | ✅      | ✅       | ✅       |
+  | Finance Access       | ✅      | ❌       | ❌       |
+  | Reports              | ✅      | ✅       | ✅       |
+
 ## Usage Guide
 
 ### Dashboard

@@ -7,7 +7,7 @@ import streamlit as st
 import pandas as pd
 from sqlalchemy import or_
 from models import Product
-from utils.auth import require_auth
+from utils.auth import require_auth, check_role
 from utils.database import get_session
 from config import LOW_STOCK_THRESHOLD
 
@@ -150,39 +150,42 @@ if low_stock:
 
 st.divider()
 
-# Add new product section
-st.subheader("➕ Add New Product")
+# Add new product section (Admin and Manager only)
+if st.session_state.role in ['admin', 'manager']:
+    st.subheader("➕ Add New Product")
 
-with st.form("add_product_form"):
-    col1, col2, col3, col4 = st.columns(4)
+    with st.form("add_product_form"):
+        col1, col2, col3, col4 = st.columns(4)
 
-    with col1:
-        new_name = st.text_input("Product Name*", placeholder="Enter product name")
+        with col1:
+            new_name = st.text_input("Product Name*", placeholder="Enter product name")
 
-    with col2:
-        new_category = st.text_input("Category*", placeholder="e.g., Electronics")
+        with col2:
+            new_category = st.text_input("Category*", placeholder="e.g., Electronics")
 
-    with col3:
-        new_price = st.number_input("Price ($)*", min_value=0.01, value=10.0, step=0.01)
+        with col3:
+            new_price = st.number_input("Price ($)*", min_value=0.01, value=10.0, step=0.01)
 
-    with col4:
-        new_stock = st.number_input("Stock*", min_value=0, value=0, step=1)
+        with col4:
+            new_stock = st.number_input("Stock*", min_value=0, value=0, step=1)
 
-    submit_add = st.form_submit_button("Add Product", use_container_width=True)
+        submit_add = st.form_submit_button("Add Product", use_container_width=True)
 
-    if submit_add:
-        if not new_name or not new_category:
-            st.error("Please fill in all required fields (marked with *)")
-        elif new_price <= 0:
-            st.error("Price must be greater than 0")
-        else:
-            with st.spinner("Adding product..."):
-                success, message = add_product(new_name, new_category, new_price, new_stock)
-                if success:
-                    st.success(message)
-                    st.rerun()
-                else:
-                    st.error(message)
+        if submit_add:
+            if not new_name or not new_category:
+                st.error("Please fill in all required fields (marked with *)")
+            elif new_price <= 0:
+                st.error("Price must be greater than 0")
+            else:
+                with st.spinner("Adding product..."):
+                    success, message = add_product(new_name, new_category, new_price, new_stock)
+                    if success:
+                        st.success(message)
+                        st.rerun()
+                    else:
+                        st.error(message)
+else:
+    st.info("ℹ️ Only Admins and Managers can add products to inventory.")
 
 st.divider()
 
@@ -220,56 +223,59 @@ if products:
 
     st.divider()
 
-    # Edit/Delete section
-    st.subheader("✏️ Edit or Delete Product")
+    # Edit/Delete section (Admin only)
+    if st.session_state.role == 'admin':
+        st.subheader("✏️ Edit or Delete Product")
 
-    col1, col2 = st.columns(2)
+        col1, col2 = st.columns(2)
 
-    with col1:
-        product_ids = [p['ID'] for p in products]
-        selected_id = st.selectbox("Select Product ID", product_ids)
+        with col1:
+            product_ids = [p['ID'] for p in products]
+            selected_id = st.selectbox("Select Product ID", product_ids)
 
-        if selected_id:
-            selected_product = next((p for p in products if p['ID'] == selected_id), None)
-            if selected_product:
-                with st.form("edit_product_form"):
-                    edit_name = st.text_input("Product Name", value=selected_product['Name'])
-                    edit_category = st.text_input("Category", value=selected_product['Category'])
-                    # Remove $ sign and convert to float
-                    price_value = float(selected_product['Price'].replace('$', ''))
-                    edit_price = st.number_input("Price ($)", min_value=0.01, value=price_value, step=0.01)
-                    edit_stock = st.number_input("Stock", min_value=0, value=selected_product['Stock'], step=1)
+            if selected_id:
+                selected_product = next((p for p in products if p['ID'] == selected_id), None)
+                if selected_product:
+                    with st.form("edit_product_form"):
+                        edit_name = st.text_input("Product Name", value=selected_product['Name'])
+                        edit_category = st.text_input("Category", value=selected_product['Category'])
+                        # Remove $ sign and convert to float
+                        price_value = float(selected_product['Price'].replace('$', ''))
+                        edit_price = st.number_input("Price ($)", min_value=0.01, value=price_value, step=0.01)
+                        edit_stock = st.number_input("Stock", min_value=0, value=selected_product['Stock'], step=1)
 
-                    submit_edit = st.form_submit_button("Update Product", use_container_width=True)
+                        submit_edit = st.form_submit_button("Update Product", use_container_width=True)
 
-                    if submit_edit:
-                        if not edit_name or not edit_category:
-                            st.error("Name and category are required")
-                        else:
-                            with st.spinner("Updating product..."):
-                                success, message = update_product(
-                                    selected_id, edit_name, edit_category, edit_price, edit_stock
-                                )
-                                if success:
-                                    st.success(message)
-                                    st.rerun()
-                                else:
-                                    st.error(message)
+                        if submit_edit:
+                            if not edit_name or not edit_category:
+                                st.error("Name and category are required")
+                            else:
+                                with st.spinner("Updating product..."):
+                                    success, message = update_product(
+                                        selected_id, edit_name, edit_category, edit_price, edit_stock
+                                    )
+                                    if success:
+                                        st.success(message)
+                                        st.rerun()
+                                    else:
+                                        st.error(message)
 
-    with col2:
-        st.write("")  # Spacing
-        st.write("")  # Spacing
-        st.write("**Delete Product**")
-        st.warning(f"⚠️ You are about to delete product ID: {selected_id}")
+        with col2:
+            st.write("")  # Spacing
+            st.write("")  # Spacing
+            st.write("**Delete Product**")
+            st.warning(f"⚠️ You are about to delete product ID: {selected_id}")
 
-        if st.button("🗑️ Delete Product", type="secondary", use_container_width=True):
-            with st.spinner("Deleting product..."):
-                success, message = delete_product(selected_id)
-                if success:
-                    st.success(message)
-                    st.rerun()
-                else:
-                    st.error(message)
+            if st.button("🗑️ Delete Product", type="secondary", use_container_width=True):
+                with st.spinner("Deleting product..."):
+                    success, message = delete_product(selected_id)
+                    if success:
+                        st.success(message)
+                        st.rerun()
+                    else:
+                        st.error(message)
+    else:
+        st.info("ℹ️ Only Admins can edit or delete products.")
 
 else:
     st.info("No products found. Add your first product above!")

@@ -22,6 +22,12 @@ st.set_page_config(
 # Require authentication
 require_auth()
 
+# Check if user is admin
+if st.session_state.role != 'admin':
+    st.error("🚫 Access Denied: Only Admins can access the Finance page.")
+    st.info("Please contact your administrator if you need access to financial records.")
+    st.stop()
+
 # Sidebar
 with st.sidebar:
     st.title("🏪 ERP System")
