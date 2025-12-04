@@ -196,23 +196,26 @@ The ERP system implements role-based permissions to control what each user can d
 - Low stock products report
 - Export reports to CSV
 
-## Running Tests
+## Testing
 
-Run the test suite with pytest:
+The system includes 6 focused tests covering core functionality:
 
+**Model Tests** (`test_models.py`):
+- Product creation with default values
+- Product-sales relationship and data integrity
+- User authentication with unique username constraints
+
+**Operations Tests** (`test_operations.py`):
+- Sales transactions update stock and create financial records
+- Low stock detection queries
+- Income/expense calculations and profit tracking
+
+Run all tests:
 ```bash
 pytest
 ```
 
-Run specific test files:
-
-```bash
-pytest tests/test_models.py
-pytest tests/test_operations.py
-```
-
-Run with verbose output:
-
+Run with detailed output:
 ```bash
 pytest -v
 ```
