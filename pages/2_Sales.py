@@ -5,7 +5,7 @@ Allows recording new sales and viewing sales history
 
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from models import Product, Sale, FinancialRecord
 from utils.auth import require_auth
 from utils.database import get_session
@@ -76,7 +76,7 @@ def create_sale(product_id, customer_name, quantity):
                 customer_name=customer_name,
                 quantity=quantity,
                 total_price=total_price,
-                sale_date=datetime.utcnow()
+                sale_date=datetime.now(timezone.utc)
             )
             session.add(sale)
 
@@ -89,7 +89,7 @@ def create_sale(product_id, customer_name, quantity):
                 amount=total_price,
                 category=product.category,
                 description=f"Sale of {quantity} x {product.name} to {customer_name}",
-                date=datetime.utcnow()
+                date=datetime.now(timezone.utc)
             )
             session.add(financial_record)
 
@@ -110,7 +110,7 @@ def get_recent_sales(days=30, start_date=None, end_date=None):
                 query = query.filter(Sale.sale_date.between(start_date, end_date))
             else:
                 # Default: last N days
-                cutoff_date = datetime.utcnow() - timedelta(days=days)
+                cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
                 query = query.filter(Sale.sale_date >= cutoff_date)
 
             sales = query.order_by(Sale.sale_date.desc()).all()
@@ -134,7 +134,7 @@ def get_sales_summary():
     try:
         with get_session() as session:
             # Today's sales
-            today = datetime.utcnow().date()
+            today = datetime.now(timezone.utc).date()
             today_start = datetime.combine(today, datetime.min.time())
 
             today_sales = session.query(Sale).filter(
@@ -145,7 +145,7 @@ def get_sales_summary():
             today_revenue = sum(s.total_price for s in today_sales)
 
             # This month's sales
-            month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             month_sales = session.query(Sale).filter(
                 Sale.sale_date >= month_start
             ).all()
@@ -272,11 +272,11 @@ end_date = None
 
 if filter_option == "Custom Range":
     with col2:
-        start_date = st.date_input("Start Date", value=datetime.utcnow() - timedelta(days=30))
+        start_date = st.date_input("Start Date", value=datetime.now(timezone.utc) - timedelta(days=30))
         start_date = datetime.combine(start_date, datetime.min.time())
 
     with col3:
-        end_date = st.date_input("End Date", value=datetime.utcnow())
+        end_date = st.date_input("End Date", value=datetime.now(timezone.utc))
         end_date = datetime.combine(end_date, datetime.max.time())
 
 # Fetch sales based on filter

@@ -6,7 +6,7 @@ Tracks income and expenses, displays financial summary
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import func, extract
 from models import FinancialRecord
 from utils.auth import require_auth
@@ -40,7 +40,7 @@ def add_expense(amount, category, description):
                 amount=amount,
                 category=category,
                 description=description,
-                date=datetime.utcnow()
+                date=datetime.now(timezone.utc)
             )
             session.add(expense)
         return True, "Expense added successfully!"

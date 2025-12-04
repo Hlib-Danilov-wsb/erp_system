@@ -3,10 +3,9 @@ SQLAlchemy models for ERP system
 Defines database schema for products, sales, users, and financial records
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from config import DATABASE_URL
 
 Base = declarative_base()
@@ -21,7 +20,7 @@ class Product(Base):
     category = Column(String(100))
     price = Column(Float, nullable=False)
     stock = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationship with sales
     sales = relationship('Sale', back_populates='product', cascade='all, delete-orphan')
@@ -39,7 +38,7 @@ class Sale(Base):
     customer_name = Column(String(200))
     quantity = Column(Integer, nullable=False)
     total_price = Column(Float, nullable=False)
-    sale_date = Column(DateTime, default=datetime.utcnow)
+    sale_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationship with product
     product = relationship('Product', back_populates='sales')
@@ -56,7 +55,7 @@ class User(Base):
     username = Column(String(100), unique=True, nullable=False)
     password_hash = Column(String(256))
     role = Column(String(50))  # admin, manager, cashier
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', role='{self.role}')>"
@@ -71,7 +70,7 @@ class FinancialRecord(Base):
     amount = Column(Float)
     category = Column(String(100))
     description = Column(Text)
-    date = Column(DateTime, default=datetime.utcnow)
+    date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     def __repr__(self):
         return f"<FinancialRecord(id={self.id}, type='{self.transaction_type}', amount={self.amount})>"

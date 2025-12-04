@@ -4,7 +4,7 @@ Generates and inserts sample data for products, sales, users, and financial reco
 """
 
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from faker import Faker
 from models import Product, Sale, User, FinancialRecord, init_db, SessionLocal
 from utils.auth import hash_password
@@ -80,7 +80,7 @@ def create_sales(session, products, count=500):
     financial_records = []
 
     # Date range: last 12 months
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=365)
 
     for i in range(count):
@@ -143,7 +143,7 @@ def create_expenses(session, count=50):
     expenses = []
 
     # Date range: last 12 months
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=365)
 
     for i in range(count):
